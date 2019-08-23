@@ -7,3 +7,4 @@ flask-mail==0.9.1
 python-dotenv==0.10.3
 jwt==0.6.1
 flask-httpauth==3.3.0
+httpie==1.0.2

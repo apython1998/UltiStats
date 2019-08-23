@@ -105,3 +105,4 @@ venv.bak/
 
 # API
 logs/
+app.db
