@@ -6,13 +6,13 @@ from app.api.auth import token_auth
 from app.api.errors import bad_request
 
 
-@bp.route('/users/<int:id>', methods=['GET'])
+@bp.route('/v1/users/<int:id>', methods=['GET'])
 @token_auth.login_required
 def get_user(id):
     return jsonify(User.query.get_or_404(id).to_dict())
 
 
-@bp.route('/users', methods=['GET'])
+@bp.route('/v1/users', methods=['GET'])
 @token_auth.login_required
 def get_users():
     page = request.args.get('page', 1, type=int)
@@ -21,7 +21,7 @@ def get_users():
     return jsonify(data)
 
 
-@bp.route('/users', methods=['POST'])
+@bp.route('/v1/users', methods=['POST'])
 def create_user():
     data = request.get_json() or {}
     if 'username' not in data or 'email' not in data or 'password' not in data:
@@ -40,7 +40,7 @@ def create_user():
     return response
 
 
-@bp.route('/users/<int:id>', methods=['PUT'])
+@bp.route('/v1/users/<int:id>', methods=['PUT'])
 @token_auth.login_required
 def update_user(id):
     user = User.query.get_or_404(id)
