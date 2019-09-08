@@ -34,7 +34,7 @@ def create_user():
     user.from_dict(data, new_user=True)
     db.session.add(user)
     db.session.commit()
-    response = jsonify(user.to_dict())
+    response = jsonify(user.to_dict(include_email=True))
     response.status_code = 201
     response.headers['Location'] = url_for('api.get_user', id=user.id)
     return response
@@ -53,4 +53,4 @@ def update_user(id):
         return bad_request('please use a different email address')
     user.from_dict(data, new_user=False)
     db.session.commit()
-    return jsonify(user.to_dict())
+    return jsonify(user.to_dict(include_email=True))
