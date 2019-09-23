@@ -1,9 +1,9 @@
-from flask import jsonify, request, url_for
+from flask import jsonify, request, url_for, g
 from app import db
 from app.models import User
 from app.api import bp
 from app.api.auth import token_auth
-from app.api.errors import bad_request
+from app.api.errors import bad_request, error_response
 
 
 @bp.route('/v1/users/<int:id>', methods=['GET'])
@@ -54,3 +54,18 @@ def update_user(id):
     user.from_dict(data, new_user=False)
     db.session.commit()
     return jsonify(user.to_dict(include_email=True))
+
+
+@bp.route('/v1/users/<int:id>', methods=['DELETE'])
+@token_auth.login_required
+def delete_user(id):
+    user = User.query.get_or_404(id)
+    if user is not g.current_user:
+        return error_response(401)
+    else:
+        user.revoke_token()
+        db.session.delete(user)
+        db.session.commit()
+        response = jsonify(None)
+        response.status_code = 204
+        return response
