@@ -37,7 +37,7 @@ class TestUserModelCase(unittest.TestCase):
 
     def test_user_creation(self):
         # Test POST user creation
-        res = self.client.post('/api/v1/users', data=json.dumps(self.user), content_type='application/json')
+        res = self.client.post('/api/v1/register', data=json.dumps(self.user), content_type='application/json')
         self.assertEqual(res.status_code, 201)
         self.assertIn('test_username', str(res.data))
 
@@ -45,12 +45,12 @@ class TestUserModelCase(unittest.TestCase):
     def test_user_update(self):
         # TEST PUT user update
         user_data = json.loads(self.client.post(
-            '/api/v1/users',
+            '/api/v1/register',
             data=json.dumps(self.user),
             content_type='application/json'
         ).data)
         token = json.loads(self.client.post(
-            'api/tokens',
+            'api/v1/login',
             headers={
                 'Authorization': _basic_auth_str(self.user['username'], self.user['password'])
             }
@@ -78,12 +78,12 @@ class TestUserModelCase(unittest.TestCase):
         self.assertEqual(0, User.query.count())
         # Create a user
         user_data = json.loads(self.client.post(
-            '/api/v1/users',
+            '/api/v1/register',
             data=json.dumps(self.user),
             content_type='application/json'
         ).data)
         token = json.loads(self.client.post(
-            'api/tokens',
+            'api/v1/login',
             headers={
                 'Authorization': _basic_auth_str(self.user['username'], self.user['password'])
             }
@@ -94,13 +94,13 @@ class TestUserModelCase(unittest.TestCase):
         user_2['username'] = 'test_username2'
         user_2['email'] = 'test_email2@test.com'
         user_2_data = json.loads(self.client.post(
-            '/api/v1/users',
+            '/api/v1/register',
             data=json.dumps(user_2),
             content_type='application/json'
         ).data)
         self.assertEqual(2, User.query.count())
         token_2 = json.loads(self.client.post(
-            'api/tokens',
+            'api/v1/login',
             headers={
                 'Authorization': _basic_auth_str(user_2['username'], self.user['password'])
             }
@@ -122,6 +122,6 @@ class TestUserModelCase(unittest.TestCase):
                 'Authorization': 'Bearer {}'.format(token)
             }
         )
-        # Now only user 2 should be left 
+        # Now only user 2 should be left
         self.assertEqual(1, User.query.count())
         self.assertEqual(res.status_code, 204)
