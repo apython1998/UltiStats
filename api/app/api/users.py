@@ -61,7 +61,7 @@ def update_user(id):
 def delete_user(id):
     user = User.query.get_or_404(id)
     if user is not g.current_user:
-        return error_response(401)
+        return bad_request('Cannot delete other users')
     else:
         user.revoke_token()
         db.session.delete(user)

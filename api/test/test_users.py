@@ -76,6 +76,7 @@ class TestUserModelCase(unittest.TestCase):
     def test_delete_user(self):
         # Test DELETE Call
         self.assertEqual(0, User.query.count())
+        # Create a user
         user_data = json.loads(self.client.post(
             '/api/v1/users',
             data=json.dumps(self.user),
@@ -88,11 +89,39 @@ class TestUserModelCase(unittest.TestCase):
             }
         ).data)['token']
         self.assertEqual(1, User.query.count())
-        self.client.delete(
+        # Try to delete with different user and assert that it is not deleted
+        user_2 = self.user.copy()
+        user_2['username'] = 'test_username2'
+        user_2['email'] = 'test_email2@test.com'
+        user_2_data = json.loads(self.client.post(
+            '/api/v1/users',
+            data=json.dumps(user_2),
+            content_type='application/json'
+        ).data)
+        self.assertEqual(2, User.query.count())
+        token_2 = json.loads(self.client.post(
+            'api/tokens',
+            headers={
+                'Authorization': _basic_auth_str(user_2['username'], self.user['password'])
+            }
+        ).data)['token']
+        bad_req = self.client.delete(
+            '/api/v1/users/{}'.format(user_data['id']),
+            content_type='application/json',
+            headers={
+                'Authorization': 'Bearer {}'.format(token_2)
+            }
+        )
+        self.assertEqual(2, User.query.count())
+        self.assertEqual(bad_req.status_code, 400)
+        # Try to delete user with itself and assert true
+        res = self.client.delete(
             '/api/v1/users/{}'.format(user_data['id']),
             content_type='application/json',
             headers={
                 'Authorization': 'Bearer {}'.format(token)
             }
         )
-        self.assertEqual(0, User.query.count())
+        # Now only user 2 should be left 
+        self.assertEqual(1, User.query.count())
+        self.assertEqual(res.status_code, 204)
