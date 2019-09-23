@@ -10,6 +10,7 @@ from config import Config
 
 class TestConfig(Config):
     TESTING = True
+    DEBUG = True
     SQLALCHEMY_DATABASE_URI = 'sqlite://'
 
 
@@ -18,16 +19,20 @@ class TestUserModelCase(unittest.TestCase):
 
     def setUp(self):
         self.app = create_app(TestConfig)
+        self.app_context = self.app.app_context()
+        self.app_context.push()
         self.client = self.app.test_client()
         self.user = {
             'username': 'test_username',
             'email': 'test_email@test.com',
             'password': 'asdfasdf'
         }
-        # binds app to current_context
-        with self.app.app_context():
-            # Create all the tables
-            db.create_all()
+        db.create_all()
+
+    def tearDown(self):
+        db.session.remove()
+        db.drop_all()
+        self.app_context.pop()
 
 
     def test_user_creation(self):
@@ -68,9 +73,26 @@ class TestUserModelCase(unittest.TestCase):
         self.assertEqual(1, updated_user['id'])
 
 
-    def tearDown(self):
-        """teardown all initialized variables."""
-        with self.app.app_context():
-            # drop all tables
-            db.session.remove()
-            db.drop_all()
+    def test_delete_user(self):
+        # Test DELETE Call
+        self.assertEqual(0, User.query.count())
+        user_data = json.loads(self.client.post(
+            '/api/v1/users',
+            data=json.dumps(self.user),
+            content_type='application/json'
+        ).data)
+        token = json.loads(self.client.post(
+            'api/tokens',
+            headers={
+                'Authorization': _basic_auth_str(self.user['username'], self.user['password'])
+            }
+        ).data)['token']
+        self.assertEqual(1, User.query.count())
+        self.client.delete(
+            '/api/v1/users/{}'.format(user_data['id']),
+            content_type='application/json',
+            headers={
+                'Authorization': 'Bearer {}'.format(token)
+            }
+        )
+        self.assertEqual(0, User.query.count())
