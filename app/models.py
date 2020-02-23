@@ -57,7 +57,7 @@ class Player(db.Model):
     points = db.relationship('Point', secondary='player_to_point')
     statistics = db.relationship(
         'Statistic',
-        backref='point',
+        backref='player',
         lazy='dynamic',
         passive_deletes=True
     )
@@ -105,6 +105,7 @@ class Tournament(db.Model):
 class Game(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     home_team_id = db.Column(db.Integer, db.ForeignKey('team.id'))  # Yourself
+    tournament_id = db.Column(db.Integer, db.ForeignKey('tournament.id'))
     opponent_team_name = db.Column(db.String(128))  # Name of Opponent
     points = db.relationship(
         'Point',
@@ -135,4 +136,4 @@ class Statistic(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     player_id = db.Column(db.Integer, db.ForeignKey('player.id'))
     point_id = db.Column(db.Integer, db.ForeignKey('point.id'))
-    stat = db.Column(db.String)
+    stat = db.Column(db.String(32))
